@@ -4,11 +4,15 @@ require 'httparty'
 require 'sys/proctable'
 require 'json'
 require 'time'
+require './logo.rb'
+
+logo = pick_logo() 
 
 NTFY_TOPIC = "quicksilver"
 
 TASKS = []
- DEFAULT_APPS = ['nvim', 'firefox', 'gnome-terminal', 'alacritty', 'zsh', 'kitty', 'bash']
+ DEFAULT_APPS = ['nvim', 'firefox', 'gnome-terminal', 'alacritty', 'zsh', 'kitty', 'bash'] # TODO: pegar os processos mais usados da lista de processos rodando no pc de x tempo em x tempo
+
 print "\nQuantas tarefas para hoje? "
 taskI = gets.chomp.to_i
 
