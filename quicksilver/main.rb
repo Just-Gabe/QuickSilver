@@ -1,30 +1,37 @@
+#!/usr/bin/env ruby
+
 require 'httparty'
 require 'sys/proctable'
 require 'json'
 require 'time'
 
-NTFY_TOPIC = "quicksilver" 
+NTFY_TOPIC = "quicksilver"
 
-print "Defina o nome da sua tarefa: "
-taskName = gets.chomp
+TASKS = []
+ DEFAULT_APPS = ['nvim', 'firefox', 'gnome-terminal', 'alacritty', 'zsh', 'kitty', 'bash']
+print "\nQuantas tarefas para hoje? "
+taskI = gets.chomp.to_i
 
-print "Horário inicial da tarefa ('ex: 10:00'): "
-taskInitial = gets.chomp
+taskI.times do |i|
+  print "Defina o nome da sua tarefa: "
+  taskName = gets.chomp
 
-print "Horário para finalizar a tarefa: "
-taskEnd = gets.chomp
+  print "Horário inicial da tarefa ('ex: 10:00'): "
+  taskInitial = gets.chomp
 
-# TODO: fazer de uma forma que eu consiga fazer um append talvez de mais tarefas
+  print "Horário para finalizar a tarefa: "
+  taskEnd = gets.chomp
 
-TASKS = [
-  {
+  new_task = {
     name: taskName,
     start_time: taskInitial,
-    end_time:   taskEnd,
-    apps_of_interest: ['nvim', 'firefox', 'gnome-terminal', 'alacritty', 'zsh', 'kitty', 'bash'],
-    notified: false 
+    end_time: taskEnd,
+    apps_of_interest: DEFAULT_APPS,
+    notified: false
   }
-]
+
+  TASKS << new_task
+end
 
 LOG_FILE = "quicksilver_log.json"
 
@@ -55,7 +62,7 @@ module SystemMonitor
   end
 
   def self.get_system_stats
-    temp = `sensors 2>/dev/null | grep 'Package id 0' | awk '{print $4}'`.strip
+    temp = `sensors 2>/dev/null | grep 'Package id 0' | awk '{print $4}'`.strip # FIX: não esta funcionando como deveria
     temp = "N/A" if temp.empty?
 
     cpu_usage = `grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'`.strip.to_f.round(2) rescue 0
