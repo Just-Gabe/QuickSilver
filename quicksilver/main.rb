@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# TODO: transformar isso em um servidor para o gui e analises
+
 require 'httparty'
 require 'sys/proctable'
 require 'json'
@@ -11,7 +13,6 @@ logo = pick_logo()
 NTFY_TOPIC = "quicksilver"
 
 TASKS = []
- DEFAULT_APPS = ['nvim', 'firefox', 'gnome-terminal', 'alacritty', 'zsh', 'kitty', 'bash'] # TODO: pegar os processos mais usados da lista de processos rodando no pc de x tempo em x tempo
 
 print "\nQuantas tarefas para hoje? "
 taskI = gets.chomp.to_i
@@ -20,7 +21,7 @@ taskI.times do |i|
   print "Defina o nome da sua tarefa: "
   taskName = gets.chomp
 
-  print "Horário inicial da tarefa ('ex: 10:00'): "
+  print "Horário inicial da tarefa ('ex: 10:00'): " # BUG: se não for especificamente nesse formato ele quebra
   taskInitial = gets.chomp
 
   print "Horário para finalizar a tarefa: "
@@ -30,7 +31,6 @@ taskI.times do |i|
     name: taskName,
     start_time: taskInitial,
     end_time: taskEnd,
-    apps_of_interest: DEFAULT_APPS,
     notified: false
   }
 
@@ -53,22 +53,24 @@ module SystemMonitor
     end
   end
 
-  def self.get_running_apps(interest_list)
-    # filtra processos que correspondem aos nomes na lista de interesse
+  def self.get_running_apps # NOTE: pega todos os processos do pc e seu uptime mas não agrupa para pegar apenas os que importam nem nada
     found = []
     ProcTable.ps do |p|
-      # verifica se o nome do executável contém algo da lista
-      if interest_list.any? { |app| p.comm.include?(app) || p.cmdline.include?(app) }
-        found << p.comm unless found.include?(p.comm)
-      end
+      uptimeSec = Time.now - p.starttime
+      uptimeStr = Time.at(uptimeSec).utc.strftime("%H:%M:%S")
+      found << {
+        name: p.comm,
+        uptime: uptimeStr
+      }  
     end
     found
   end
 
   def self.get_system_stats
-    temp = `sensors 2>/dev/null | grep 'Package id 0' | awk '{print $4}'`.strip # FIX: não esta funcionando como deveria
-    temp = "N/A" if temp.empty?
-
+    output = `sensors 2>/dev/null` 
+    temp_match = output.match(/(?:Tctl|Package id 0|temp1):\s+\+([\d\.]+)/)
+    
+    temp = temp_match ? temp_match[1] : "N/A"
     cpu_usage = `grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'`.strip.to_f.round(2) rescue 0
     mem_info = `free -m | grep Mem | awk '{print $3}'`.strip rescue "0"
     
@@ -109,7 +111,7 @@ loop do
       puts "Monitorando #{task[:name]}..."
 
       stats = SystemMonitor.get_system_stats
-      active_apps = SystemMonitor.get_running_apps(task[:apps_of_interest])
+      active_apps = SystemMonitor.get_running_apps
       
       log_entry = {
         task: task[:name],
