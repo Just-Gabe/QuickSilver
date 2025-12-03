@@ -8,34 +8,36 @@ require 'json'
 require 'time'
 require './logo.rb'
 
-logo = pick_logo() 
-
 NTFY_TOPIC = "quicksilver"
 
 TASKS = []
 
-print "\nQuantas tarefas para hoje? "
-taskI = gets.chomp.to_i
+if ARGV[0] == '-h' or ARGV[0] == '--help'
+  pick_logo
+  print %q{
+  -h/--help: prints help text
+  -t <task name>: defines task name, can be used with "" to declare names with spaces
+  -i: defines initial time for the defined task
+  -e: defines time for the task to end
+ 
+  }
+  exit
+else
+  taskName = ARGV[0]
+  taskInitial = ARGV[1]
+  taskEnd = ARGV[2]
+end
 
-taskI.times do |i|
-  print "Defina o nome da sua tarefa: "
-  taskName = gets.chomp
-
-  print "Horário inicial da tarefa ('ex: 10:00'): " # BUG: se não for especificamente nesse formato ele quebra
-  taskInitial = gets.chomp
-
-  print "Horário para finalizar a tarefa: "
-  taskEnd = gets.chomp
-
-  new_task = {
+print "Iniciando tarefa: #{taskName} de #{taskInitial} a #{taskEnd}\n"
+new_task = {
     name: taskName,
     start_time: taskInitial,
     end_time: taskEnd,
     notified: false
-  }
+}
 
-  TASKS << new_task
-end
+TASKS << new_task
+
 
 LOG_FILE = "quicksilver_log.json"
 
@@ -51,19 +53,6 @@ module SystemMonitor
     rescue => e
       puts "[ERRO] Falha ao enviar notificação: #{e.message}"
     end
-  end
-
-  def self.get_running_apps # NOTE: pega todos os processos do pc e seu uptime mas não agrupa para pegar apenas os que importam nem nada
-    found = []
-    ProcTable.ps do |p|
-      uptimeSec = Time.now - p.starttime
-      uptimeStr = Time.at(uptimeSec).utc.strftime("%H:%M:%S")
-      found << {
-        name: p.comm,
-        uptime: uptimeStr
-      }  
-    end
-    found
   end
 
   def self.get_system_stats
@@ -85,7 +74,6 @@ module SystemMonitor
   end
 end
 
-puts "Iniciando monitor de tarefas..."
 SystemMonitor.send_notification("Quicksilver iniciado...")
 
 loop do
@@ -111,12 +99,10 @@ loop do
       puts "Monitorando #{task[:name]}..."
 
       stats = SystemMonitor.get_system_stats
-      active_apps = SystemMonitor.get_running_apps
       
       log_entry = {
         task: task[:name],
         stats: stats,
-        active_apps: active_apps
       }
 
       File.open(LOG_FILE, 'a') do |f|
