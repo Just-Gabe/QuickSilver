@@ -88,7 +88,7 @@ class QuicksilverApp
       return
     end
 
-    puts "=== Tarefas Ativas (Daemon) ==="
+    puts "=== Tarefas Ativas ==="
     pids.each do |pid_file|
       pid = File.read(pid_file).to_i
       begin
@@ -131,8 +131,7 @@ class QuicksilverApp
     Opções:
       -h, --help    mostra esta mensagem
       -d, --daemon  passa processo para background
-      --list        lista tarefas
-      status        status dos daemons
+      --list/status lista tarefas
     }
     puts ""
   end
@@ -142,7 +141,7 @@ class QuicksilverApp
     begin; HTTParty.post(url, body: message.encode("UTF-8")); rescue; end
   end
 
-  def get_system_stats
+  def get_system_stats # TODO: fazer para windows também
     output = `sensors 2>/dev/null`
     temp = output.match(/(?:Tctl|Package id 0|temp1):\s+\+([\d\.]+)/)&.captures&.first || "N/A"
     cpu = `grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'`.strip.to_f.round(2) rescue 0
