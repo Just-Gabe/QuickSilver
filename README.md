@@ -20,4 +20,4 @@ Uso:
     
     --list/status lista tarefas
 
-para usar como binário, coloque a para bin/ no Path.
+para usar como binário, coloque a pasta bin/ no Path.
