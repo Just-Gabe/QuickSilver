@@ -8,11 +8,17 @@ require_relative 'logo'
 
 class QuicksilverApp
   include Sys
-
-  NTFY_TOPIC = "quicksilver"
+  
   BASE_DIR = File.join(Dir.home, ".quicksilver")
   LOG_FILE = File.join(BASE_DIR, "quicksilver_history.json")
   PID_DIR  = File.join(BASE_DIR, "pids")
+  
+if File.exist?(BASE_DIR)
+  NTFY_TOPIC = File.read("#{BASE_DIR}/config.txt")
+else
+  NTFY_FILE = File.write("#{BASE_DIR}/config.txt", "quicksilver") # Padrão "quicksilver" mas mude
+  NTFY_TOPIC = File.read("#{BASE_DIR}/config.txt")
+end
 
   def initialize(args)
     FileUtils.mkdir_p(BASE_DIR)
@@ -132,6 +138,8 @@ class QuicksilverApp
       -h, --help    mostra esta mensagem
       -d, --daemon  passa processo para background
       --list/status lista tarefas
+
+      para configurar o servidor do ntfy, mude o arquivo em .quicksilver/config.txt
     }
     puts ""
   end
