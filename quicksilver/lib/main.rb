@@ -141,12 +141,12 @@ class QuicksilverApp
     begin; HTTParty.post(url, body: message.encode("UTF-8")); rescue; end
   end
 
-  def get_system_stats # TODO: fazer para windows também
-    output = `sensors 2>/dev/null`
-    temp = output.match(/(?:Tctl|Package id 0|temp1):\s+\+([\d\.]+)/)&.captures&.first || "N/A"
-    cpu = `grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'`.strip.to_f.round(2) rescue 0
-    { temperature: temp, cpu_usage: cpu }
-  end
+  # def get_system_stats # TODO: fazer para windows também
+  #   output = `sensors 2>/dev/null`
+  #   temp = output.match(/(?:Tctl|Package id 0|temp1):\s+\+([\d\.]+)/)&.captures&.first || "N/A"
+  #   cpu = `grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'`.strip.to_f.round(2) rescue 0
+  #   { temperature: temp, cpu_usage: cpu }
+  # end
 
   def start_monitoring
     task = @tasks.first
@@ -180,9 +180,10 @@ class QuicksilverApp
       end
 
       if now >= t_start && now < t_end
-        stats = get_system_stats
+        # stats = get_system_stats
         # LOG DE MONITORAMENTO
-        log_data(task[:name], "RUNNING", stats)
+        # log_data(task[:name], "RUNNING", stats)
+        log_data(task[:name], "RUNNING")
         
         puts "Monitorando..." unless @args.include?('-d')
       end
